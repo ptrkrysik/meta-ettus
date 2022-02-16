@@ -1,0 +1,40 @@
+From 3491b69becb4377e114e126a08792114544b393c Mon Sep 17 00:00:00 2001
+From: Srinivas Neeli <srinivas.neeli@xilinx.com>
+Date: Mon, 23 Mar 2020 23:23:02 +0530
+Subject: [PATCH 07/11] pinctrl: zynq: use module_platform_driver to simplify
+ the code
+
+module_platform_driver() makes the code simpler by eliminating
+boilerplate code.
+
+Signed-off-by: Srinivas Neeli <srinivas.neeli@xilinx.com>
+State: pending
+---
+ drivers/pinctrl/pinctrl-zynq.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pinctrl/pinctrl-zynq.c b/drivers/pinctrl/pinctrl-zynq.c
+index c6052a0e827a..4d16c19afc61 100644
+--- a/drivers/pinctrl/pinctrl-zynq.c
++++ b/drivers/pinctrl/pinctrl-zynq.c
+@@ -8,6 +8,7 @@
+  */
+ #include <linux/io.h>
+ #include <linux/mfd/syscon.h>
++#include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+@@ -1208,8 +1209,4 @@ static struct platform_driver zynq_pinctrl_driver = {
+ 	.probe = zynq_pinctrl_probe,
+ };
+ 
+-static int __init zynq_pinctrl_init(void)
+-{
+-	return platform_driver_register(&zynq_pinctrl_driver);
+-}
+-arch_initcall(zynq_pinctrl_init);
++module_platform_driver(zynq_pinctrl_driver);
+-- 
+2.25.1
+

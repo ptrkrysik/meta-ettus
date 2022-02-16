@@ -47,3 +47,14 @@ patch 0002-net-nixge-use-nixge_device_reset-helper.patch
 patch 0001-arm64-zynqmp-add-support-for-Rev-6.patch
 patch 0001-arm64-zynqmp-add-support-for-Rev-7.patch
 patch 0001-nixge-add-support-for-ethtool-pause-control.patch
+patch 0001-pinctrl-core-Handling-pinmux-and-pinconf-separately.patch
+patch 0002-pinctrl-core-Set-ret-to-0-when-group-is-skipped.patch
+patch 0003-dt-bindings-pinctrl-Add-binding-for-ZynqMP-pinctrl-d.patch
+patch 0004-firmware-xilinx-Add-pinctrl-support.patch
+patch 0005-pinctrl-Add-Xilinx-ZynqMP-pinctrl-driver-support.patch
+patch 0006-pinctrl-zynqmp-Maintain-backward-compatibility-with-.patch
+patch 0007-pinctrl-zynq-use-module_platform_driver-to-simplify-.patch
+patch 0008-pinctrl-zynqmp-some-code-cleanups.patch
+patch 0009-dt-bindings-pinctrl-pinctrl-zynq-Convert-to-yaml.patch
+patch 0010-dt-bindings-pinctrl-zynq-Replace-io-standard-with-po.patch
+patch 0011-pinctrl-zynqmp-Drop-pinctrl_unregister-for-devm_-reg.patch

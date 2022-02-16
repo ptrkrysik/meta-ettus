@@ -1,0 +1,182 @@
+From 0b55f0801f73a444aa6a0f9730b11b8f61ef3471 Mon Sep 17 00:00:00 2001
+From: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Date: Fri, 7 May 2021 13:48:19 +0530
+Subject: [PATCH 06/11] pinctrl: zynqmp: Maintain backward compatibility with
+ previous version
+
+- To maintain the backward compatibility driver specific parameters
+  (io-standard and schmitt-cmos) will be supported in the driver till
+  2021.2 release.
+- Using 'power-source' property will give following warning message from
+  ZynqMP pinctrl driver due to an issue in PMUFW while getting the Voltage
+  information. "zynqmp-pinctrl firmware:zynqmp-firmware:pinctrl: Invalid IO
+  Standard requested for pin N".
+  This is just warning messages in the kernel log and does not impact the
+  functionality of the driver. To avoid these messages use latest PMUFW from
+  2021.1 release.
+
+Signed-off-by: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+State: not-upstreamable
+---
+ drivers/pinctrl/pinctrl-zynqmp.c             | 67 +++++++++++++++++++-
+ include/dt-bindings/pinctrl/pinctrl-zynqmp.h | 12 +++-
+ 2 files changed, 75 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/pinctrl-zynqmp.c b/drivers/pinctrl/pinctrl-zynqmp.c
+index d5497003ce71..86240e7fd00f 100644
+--- a/drivers/pinctrl/pinctrl-zynqmp.c
++++ b/drivers/pinctrl/pinctrl-zynqmp.c
+@@ -88,6 +88,33 @@ struct zynqmp_pctrl_group {
+ 	unsigned int npins;
+ };
+ 
++/**
++ * enum zynqmp_pin_config_param - possible pin configuration parameters
++ * @PIN_CONFIG_IOSTANDARD:	if the pin can select an IO standard,
++ *				the argument to this parameter (on a
++ *				custom format) tells the driver which
++ *				alternative IO standard to use
++ * @PIN_CONFIG_SCHMITTCMOS:	this parameter (on a custom format) allows
++ *				to select schmitt or cmos input for MIO pins
++ */
++enum zynqmp_pin_config_param {
++	PIN_CONFIG_IOSTANDARD = PIN_CONFIG_END + 1,
++	PIN_CONFIG_SCHMITTCMOS,
++};
++
++static const struct pinconf_generic_params zynqmp_dt_params[] = {
++	{"io-standard", PIN_CONFIG_IOSTANDARD, IO_STANDARD_LVCMOS18},
++	{"schmitt-cmos", PIN_CONFIG_SCHMITTCMOS, PIN_INPUT_TYPE_SCHMITT},
++};
++
++#ifdef CONFIG_DEBUG_FS
++static const struct
++pin_config_item zynqmp_conf_items[ARRAY_SIZE(zynqmp_dt_params)] = {
++	PCONFDUMP(PIN_CONFIG_IOSTANDARD, "IO-standard", NULL, true),
++	PCONFDUMP(PIN_CONFIG_SCHMITTCMOS, "schmitt-cmos", NULL, true),
++};
++#endif
++
+ static struct pinctrl_desc zynqmp_desc;
+ 
+ static int zynqmp_pctrl_get_groups_count(struct pinctrl_dev *pctldev)
+@@ -284,10 +311,22 @@ static int zynqmp_pinconf_cfg_get(struct pinctrl_dev *pctldev,
+ 
+ 		arg = 1;
+ 		break;
++	case PIN_CONFIG_IOSTANDARD:
++		dev_warn(pctldev->dev,
++			 "'io-standard' will be deprecated post 2021.2 release, instead use 'power-source'.\n");
++		param = PM_PINCTRL_CONFIG_VOLTAGE_STATUS;
++		ret = zynqmp_pm_pinctrl_get_config(pin, param, &arg);
++		break;
+ 	case PIN_CONFIG_POWER_SOURCE:
+ 		param = PM_PINCTRL_CONFIG_VOLTAGE_STATUS;
+ 		ret = zynqmp_pm_pinctrl_get_config(pin, param, &arg);
+ 		break;
++	case PIN_CONFIG_SCHMITTCMOS:
++		dev_warn(pctldev->dev,
++			 "'schmitt-cmos' will be deprecated post 2021.2 release, instead use 'input-schmitt-enable/disable'.\n");
++		param = PM_PINCTRL_CONFIG_SCHMITT_CMOS;
++		ret = zynqmp_pm_pinctrl_get_config(pin, param, &arg);
++		break;
+ 	case PIN_CONFIG_INPUT_SCHMITT_ENABLE:
+ 		param = PM_PINCTRL_CONFIG_SCHMITT_CMOS;
+ 		ret = zynqmp_pm_pinctrl_get_config(pin, param, &arg);
+@@ -376,6 +415,12 @@ static int zynqmp_pinconf_cfg_set(struct pinctrl_dev *pctldev,
+ 			arg = PM_PINCTRL_BIAS_DISABLE;
+ 			ret = zynqmp_pm_pinctrl_set_config(pin, param, arg);
+ 			break;
++		case PIN_CONFIG_SCHMITTCMOS:
++			dev_warn(pctldev->dev,
++				 "'schmitt-cmos' will be deprecated post 2021.2 release, instead use 'input-schmitt-enable/disable'.\n");
++			param = PM_PINCTRL_CONFIG_SCHMITT_CMOS;
++			ret = zynqmp_pm_pinctrl_set_config(pin, param, arg);
++			break;
+ 		case PIN_CONFIG_INPUT_SCHMITT_ENABLE:
+ 			param = PM_PINCTRL_CONFIG_SCHMITT_CMOS;
+ 			ret = zynqmp_pm_pinctrl_set_config(pin, param, arg);
+@@ -405,6 +450,16 @@ static int zynqmp_pinconf_cfg_set(struct pinctrl_dev *pctldev,
+ 			param = PM_PINCTRL_CONFIG_DRIVE_STRENGTH;
+ 			ret = zynqmp_pm_pinctrl_set_config(pin, param, value);
+ 			break;
++		case PIN_CONFIG_IOSTANDARD:
++			dev_warn(pctldev->dev,
++				 "'io-standard' will be deprecated post 2021.2 release, instead use 'power-source'.\n");
++			param = PM_PINCTRL_CONFIG_VOLTAGE_STATUS;
++			ret = zynqmp_pm_pinctrl_get_config(pin, param, &value);
++			if (arg != value)
++				dev_warn(pctldev->dev,
++					 "Invalid IO Standard requested for pin %d\n",
++					 pin);
++			break;
+ 		case PIN_CONFIG_POWER_SOURCE:
+ 			param = PM_PINCTRL_CONFIG_VOLTAGE_STATUS;
+ 			ret = zynqmp_pm_pinctrl_get_config(pin, param, &value);
+@@ -416,9 +471,9 @@ static int zynqmp_pinconf_cfg_set(struct pinctrl_dev *pctldev,
+ 
+ 			break;
+ 		case PIN_CONFIG_BIAS_HIGH_IMPEDANCE:
+-		case PIN_CONFIG_MODE_LOW_POWER:
++		case PIN_CONFIG_LOW_POWER_MODE:
+ 			/*
+-			 * These cases are mentioned in dts but configurable
++			 * This cases are mentioned in dts but configurable
+ 			 * registers are unknown. So falling through to ignore
+ 			 * boot time warnings as of now.
+ 			 */
+@@ -486,6 +541,9 @@ static struct pinctrl_desc zynqmp_desc = {
+ 	.pctlops = &zynqmp_pctrl_ops,
+ 	.pmxops = &zynqmp_pinmux_ops,
+ 	.confops = &zynqmp_pinconf_ops,
++#ifdef CONFIG_DEBUG_FS
++	.custom_conf_items = zynqmp_conf_items,
++#endif
+ };
+ 
+ static int zynqmp_pinctrl_get_function_groups(u32 fid, u32 index, u16 *groups)
+@@ -869,9 +927,12 @@ static int zynqmp_pinctrl_probe(struct platform_device *pdev)
+ 	if (IS_ERR(pctrl->pctrl))
+ 		return PTR_ERR(pctrl->pctrl);
+ 
++
+ 	platform_set_drvdata(pdev, pctrl);
+ 
+-	return ret;
++	dev_info(&pdev->dev, "zynqmp pinctrl initialized\n");
++
++	return 0;
+ }
+ 
+ static int zynqmp_pinctrl_remove(struct platform_device *pdev)
+diff --git a/include/dt-bindings/pinctrl/pinctrl-zynqmp.h b/include/dt-bindings/pinctrl/pinctrl-zynqmp.h
+index cdb215734bdf..509190aa45f7 100644
+--- a/include/dt-bindings/pinctrl/pinctrl-zynqmp.h
++++ b/include/dt-bindings/pinctrl/pinctrl-zynqmp.h
+@@ -8,7 +8,7 @@
+ #ifndef _DT_BINDINGS_PINCTRL_ZYNQMP_H
+ #define _DT_BINDINGS_PINCTRL_ZYNQMP_H
+ 
+-/* Bit value for different voltage levels */
++/* Bit value for IO standards */
+ #define IO_STANDARD_LVCMOS33	0
+ #define IO_STANDARD_LVCMOS18	1
+ 
+@@ -16,4 +16,14 @@
+ #define SLEW_RATE_FAST		0
+ #define SLEW_RATE_SLOW		1
+ 
++/* Bit values for Pin inputs */
++#define PIN_INPUT_TYPE_CMOS	0
++#define PIN_INPUT_TYPE_SCHMITT	1
++
++/* Bit values for drive control*/
++#define DRIVE_STRENGTH_2MA	2
++#define DRIVE_STRENGTH_4MA	4
++#define DRIVE_STRENGTH_8MA	8
++#define DRIVE_STRENGTH_12MA	12
++
+ #endif /* _DT_BINDINGS_PINCTRL_ZYNQMP_H */
+-- 
+2.25.1
+
