@@ -1,0 +1,38 @@
+From 77e8da538bfbeaca3e0919e9dee21df4ed1a7ee1 Mon Sep 17 00:00:00 2001
+From: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Date: Wed, 21 Jul 2021 17:22:32 +0530
+Subject: [PATCH] pinctrl: pinctrl-zynq: Add support for 'power-source'
+ parameter
+
+Add support for generic pin parameter 'power-source'.
+To maintain the backward compatibility, 'io-standard' parameter is still
+supported in the driver.
+
+Signed-off-by: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Link: https://lore.kernel.org/r/1626868353-96475-4-git-send-email-lakshmi.sai.krishna.potthuri@xilinx.com
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+State: upstream (cdd57325548af9803f0602914de16a8ddcb5bec0)
+---
+ drivers/pinctrl/pinctrl-zynq.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pinctrl/pinctrl-zynq.c b/drivers/pinctrl/pinctrl-zynq.c
+index c6052a0e827a..1707a54b699f 100644
+--- a/drivers/pinctrl/pinctrl-zynq.c
++++ b/drivers/pinctrl/pinctrl-zynq.c
+@@ -1028,6 +1028,7 @@ static int zynq_pinconf_cfg_get(struct pinctrl_dev *pctldev,
+ 		break;
+ 	}
+ 	case PIN_CONFIG_IOSTANDARD:
++	case PIN_CONFIG_POWER_SOURCE:
+ 		arg = zynq_pinconf_iostd_get(reg);
+ 		break;
+ 	default:
+@@ -1078,6 +1079,7 @@ static int zynq_pinconf_cfg_set(struct pinctrl_dev *pctldev,
+ 
+ 			break;
+ 		case PIN_CONFIG_IOSTANDARD:
++		case PIN_CONFIG_POWER_SOURCE:
+ 			if (arg <= zynq_iostd_min || arg >= zynq_iostd_max) {
+ 				dev_warn(pctldev->dev,
+ 					 "unsupported IO standard '%u'\n",

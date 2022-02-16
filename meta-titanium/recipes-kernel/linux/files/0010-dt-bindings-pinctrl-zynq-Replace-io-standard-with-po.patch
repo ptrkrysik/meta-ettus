@@ -1,0 +1,79 @@
+From 1c3d8710aedb0f9004b5a36a82ae029b350914d9 Mon Sep 17 00:00:00 2001
+From: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Date: Wed, 21 Jul 2021 17:22:31 +0530
+Subject: [PATCH 10/11] dt-bindings: pinctrl-zynq: Replace 'io-standard' with
+ 'power-source'
+
+Replace custom pin configuration option 'io-standard' with generic property
+'power-source' for Zynq pinctrl also add dt-binding file contains pin
+configuration defines for Zynq pinctrl.
+
+Signed-off-by: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Link: https://lore.kernel.org/r/1626868353-96475-3-git-send-email-lakshmi.sai.krishna.potthuri@xilinx.com
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+State: upstream (ef641c449e8083c4314c125d8e32b37644ddd852)
+---
+ .../bindings/pinctrl/xlnx,zynq-pinctrl.yaml     |  8 +++-----
+ include/dt-bindings/pinctrl/pinctrl-zynq.h      | 17 +++++++++++++++++
+ 2 files changed, 20 insertions(+), 5 deletions(-)
+ create mode 100644 include/dt-bindings/pinctrl/pinctrl-zynq.h
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/xlnx,zynq-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/xlnx,zynq-pinctrl.yaml
+index 2da1969e02ec..ac97dbf6998e 100644
+--- a/Documentation/devicetree/bindings/pinctrl/xlnx,zynq-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/xlnx,zynq-pinctrl.yaml
+@@ -156,10 +156,7 @@ patternProperties:
+           slew-rate:
+             enum: [0, 1]
+ 
+-          io-standard:
+-            description:
+-              Selects the IO standard for MIO pins, this is driver specific.
+-            $ref: "/schemas/types.yaml#/definitions/uint32"
++          power-source:
+             enum: [1, 2, 3, 4]
+ 
+         oneOf:
+@@ -179,6 +176,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
++    #include <dt-bindings/pinctrl/pinctrl-zynq.h>
+     pinctrl0: pinctrl@700 {
+        compatible = "xlnx,zynq-pinctrl";
+        reg = <0x700 0x200>;
+@@ -193,7 +191,7 @@ examples:
+            conf {
+                groups = "uart1_10_grp";
+                slew-rate = <0>;
+-               io-standard = <1>;
++               power-source = <IO_STANDARD_LVCMOS18>;
+            };
+ 
+            conf-rx {
+diff --git a/include/dt-bindings/pinctrl/pinctrl-zynq.h b/include/dt-bindings/pinctrl/pinctrl-zynq.h
+new file mode 100644
+index 000000000000..bbfc345f017d
+--- /dev/null
++++ b/include/dt-bindings/pinctrl/pinctrl-zynq.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * MIO pin configuration defines for Xilinx Zynq
++ *
++ * Copyright (C) 2021 Xilinx, Inc.
++ */
++
++#ifndef _DT_BINDINGS_PINCTRL_ZYNQ_H
++#define _DT_BINDINGS_PINCTRL_ZYNQ_H
++
++/* Configuration options for different power supplies */
++#define IO_STANDARD_LVCMOS18	1
++#define IO_STANDARD_LVCMOS25	2
++#define IO_STANDARD_LVCMOS33	3
++#define IO_STANDARD_HSTL	4
++
++#endif /* _DT_BINDINGS_PINCTRL_ZYNQ_H */
+-- 
+2.25.1
+

@@ -1,0 +1,346 @@
+From 2859da290f2c5be61f85f553c49263dfcc70bbc7 Mon Sep 17 00:00:00 2001
+From: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Date: Thu, 22 Apr 2021 14:00:00 +0530
+Subject: [PATCH 04/11] firmware: xilinx: Add pinctrl support
+
+Adding pinctrl support to query platform specific information (pins)
+from firmware.
+
+Signed-off-by: Sai Krishna Potthuri <lakshmi.sai.krishna.potthuri@xilinx.com>
+Acked-by: Michal Simek <michal.simek@xilinx.com>
+Link: https://lore.kernel.org/r/1619080202-31924-2-git-send-email-lakshmi.sai.krishna.potthuri@xilinx.com
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+State: upstream (fa989ae7c7b38efbc6c3370571fb8a6f7350029a)
+---
+ drivers/firmware/xilinx/zynqmp.c     | 114 ++++++++++++++++++++++++++
+ include/linux/firmware/xlnx-zynqmp.h | 118 +++++++++++++++++++++++++--
+ 2 files changed, 227 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/firmware/xilinx/zynqmp.c b/drivers/firmware/xilinx/zynqmp.c
+index c0b5334e1060..31a391ccfb76 100644
+--- a/drivers/firmware/xilinx/zynqmp.c
++++ b/drivers/firmware/xilinx/zynqmp.c
+@@ -811,6 +811,120 @@ int zynqmp_pm_fpga_get_status(u32 *value)
+ }
+ EXPORT_SYMBOL_GPL(zynqmp_pm_fpga_get_status);
+ 
++/**
++ * zynqmp_pm_pinctrl_request - Request Pin from firmware
++ * @pin: Pin number to request
++ *
++ * This function requests pin from firmware.
++ *
++ * Return: Returns status, either success or error+reason.
++ */
++int zynqmp_pm_pinctrl_request(const u32 pin)
++{
++	return zynqmp_pm_invoke_fn(PM_PINCTRL_REQUEST, pin, 0, 0, 0, NULL);
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_request);
++
++/**
++ * zynqmp_pm_pinctrl_release - Inform firmware that Pin control is released
++ * @pin: Pin number to release
++ *
++ * This function release pin from firmware.
++ *
++ * Return: Returns status, either success or error+reason.
++ */
++int zynqmp_pm_pinctrl_release(const u32 pin)
++{
++	return zynqmp_pm_invoke_fn(PM_PINCTRL_RELEASE, pin, 0, 0, 0, NULL);
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_release);
++
++/**
++ * zynqmp_pm_pinctrl_get_function - Read function id set for the given pin
++ * @pin: Pin number
++ * @id: Buffer to store function ID
++ *
++ * This function provides the function currently set for the given pin.
++ *
++ * Return: Returns status, either success or error+reason
++ */
++int zynqmp_pm_pinctrl_get_function(const u32 pin, u32 *id)
++{
++	u32 ret_payload[PAYLOAD_ARG_CNT];
++	int ret;
++
++	if (!id)
++		return -EINVAL;
++
++	ret = zynqmp_pm_invoke_fn(PM_PINCTRL_GET_FUNCTION, pin, 0,
++				  0, 0, ret_payload);
++	*id = ret_payload[1];
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_get_function);
++
++/**
++ * zynqmp_pm_pinctrl_set_function - Set requested function for the pin
++ * @pin: Pin number
++ * @id: Function ID to set
++ *
++ * This function sets requested function for the given pin.
++ *
++ * Return: Returns status, either success or error+reason.
++ */
++int zynqmp_pm_pinctrl_set_function(const u32 pin, const u32 id)
++{
++	return zynqmp_pm_invoke_fn(PM_PINCTRL_SET_FUNCTION, pin, id,
++				   0, 0, NULL);
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_set_function);
++
++/**
++ * zynqmp_pm_pinctrl_get_config - Get configuration parameter for the pin
++ * @pin: Pin number
++ * @param: Parameter to get
++ * @value: Buffer to store parameter value
++ *
++ * This function gets requested configuration parameter for the given pin.
++ *
++ * Return: Returns status, either success or error+reason.
++ */
++int zynqmp_pm_pinctrl_get_config(const u32 pin, const u32 param,
++				 u32 *value)
++{
++	u32 ret_payload[PAYLOAD_ARG_CNT];
++	int ret;
++
++	if (!value)
++		return -EINVAL;
++
++	ret = zynqmp_pm_invoke_fn(PM_PINCTRL_CONFIG_PARAM_GET, pin, param,
++				  0, 0, ret_payload);
++	*value = ret_payload[1];
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_get_config);
++
++/**
++ * zynqmp_pm_pinctrl_set_config - Set configuration parameter for the pin
++ * @pin: Pin number
++ * @param: Parameter to set
++ * @value: Parameter value to set
++ *
++ * This function sets requested configuration parameter for the given pin.
++ *
++ * Return: Returns status, either success or error+reason.
++ */
++int zynqmp_pm_pinctrl_set_config(const u32 pin, const u32 param,
++				 u32 value)
++{
++	return zynqmp_pm_invoke_fn(PM_PINCTRL_CONFIG_PARAM_SET, pin,
++				   param, value, 0, NULL);
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_pinctrl_set_config);
++
+ /**
+  * zynqmp_pm_init_finalize() - PM call to inform firmware that the caller
+  *			       master has initialized its own power management
+diff --git a/include/linux/firmware/xlnx-zynqmp.h b/include/linux/firmware/xlnx-zynqmp.h
+index b544cb694b02..2df5f7e2ef5c 100644
+--- a/include/linux/firmware/xlnx-zynqmp.h
++++ b/include/linux/firmware/xlnx-zynqmp.h
+@@ -14,6 +14,8 @@
+ #define __FIRMWARE_ZYNQMP_H__
+ #include <linux/types.h>
+ 
++#include <linux/err.h>
++
+ #define ZYNQMP_PM_VERSION_MAJOR	1
+ #define ZYNQMP_PM_VERSION_MINOR	0
+ 
+@@ -73,6 +75,12 @@ enum pm_api_id {
+ 	PM_FPGA_LOAD,
+ 	PM_FPGA_GET_STATUS,
+ 	PM_GET_CHIPID = 24,
++	PM_PINCTRL_REQUEST = 28,
++	PM_PINCTRL_RELEASE = 29,
++	PM_PINCTRL_GET_FUNCTION = 30,
++	PM_PINCTRL_SET_FUNCTION = 31,
++	PM_PINCTRL_CONFIG_PARAM_GET = 32,
++	PM_PINCTRL_CONFIG_PARAM_SET = 33,
+ 	PM_IOCTL = 34,
+ 	PM_QUERY_DATA,
+ 	PM_CLOCK_ENABLE,
+@@ -119,6 +127,8 @@ enum pm_ioctl_id {
+ 	IOCTL_READ_PGGS = 15,
+ 	/* Set healthy bit value */
+ 	IOCTL_SET_BOOT_HEALTH_STATUS = 17,
++	/* AI engine NPI ISR clear */
++	IOCTL_AIE_ISR_CLEAR = 24,
+ };
+ 
+ enum pm_query_id {
+@@ -128,6 +138,12 @@ enum pm_query_id {
+ 	PM_QID_CLOCK_GET_FIXEDFACTOR_PARAMS,
+ 	PM_QID_CLOCK_GET_PARENTS,
+ 	PM_QID_CLOCK_GET_ATTRIBUTES,
++	PM_QID_PINCTRL_GET_NUM_PINS = 6,
++	PM_QID_PINCTRL_GET_NUM_FUNCTIONS = 7,
++	PM_QID_PINCTRL_GET_NUM_FUNCTION_GROUPS = 8,
++	PM_QID_PINCTRL_GET_FUNCTION_NAME = 9,
++	PM_QID_PINCTRL_GET_FUNCTION_GROUPS = 10,
++	PM_QID_PINCTRL_GET_PIN_GROUPS = 11,
+ 	PM_QID_CLOCK_GET_NUM_CLOCKS = 12,
+ 	PM_QID_CLOCK_GET_MAX_DIVISOR,
+ };
+@@ -291,6 +307,10 @@ enum zynqmp_pm_request_ack {
+ };
+ 
+ enum pm_node_id {
++	NODE_TCM_0_A = 15,
++	NODE_TCM_0_B = 16,
++	NODE_TCM_1_A = 17,
++	NODE_TCM_1_B = 18,
+ 	NODE_SD_0 = 39,
+ 	NODE_SD_1,
+ };
+@@ -306,6 +326,44 @@ enum dll_reset_type {
+ 	PM_DLL_RESET_PULSE,
+ };
+ 
++enum pm_pinctrl_config_param {
++	PM_PINCTRL_CONFIG_SLEW_RATE = 0,
++	PM_PINCTRL_CONFIG_BIAS_STATUS = 1,
++	PM_PINCTRL_CONFIG_PULL_CTRL = 2,
++	PM_PINCTRL_CONFIG_SCHMITT_CMOS = 3,
++	PM_PINCTRL_CONFIG_DRIVE_STRENGTH = 4,
++	PM_PINCTRL_CONFIG_VOLTAGE_STATUS = 5,
++	PM_PINCTRL_CONFIG_TRI_STATE = 6,
++	PM_PINCTRL_CONFIG_MAX = 7,
++};
++
++enum pm_pinctrl_slew_rate {
++	PM_PINCTRL_SLEW_RATE_FAST = 0,
++	PM_PINCTRL_SLEW_RATE_SLOW = 1,
++};
++
++enum pm_pinctrl_bias_status {
++	PM_PINCTRL_BIAS_DISABLE = 0,
++	PM_PINCTRL_BIAS_ENABLE = 1,
++};
++
++enum pm_pinctrl_pull_ctrl {
++	PM_PINCTRL_BIAS_PULL_DOWN = 0,
++	PM_PINCTRL_BIAS_PULL_UP = 1,
++};
++
++enum pm_pinctrl_schmitt_cmos {
++	PM_PINCTRL_INPUT_TYPE_CMOS = 0,
++	PM_PINCTRL_INPUT_TYPE_SCHMITT = 1,
++};
++
++enum pm_pinctrl_drive_strength {
++	PM_PINCTRL_DRIVE_STRENGTH_2MA = 0,
++	PM_PINCTRL_DRIVE_STRENGTH_4MA = 1,
++	PM_PINCTRL_DRIVE_STRENGTH_8MA = 2,
++	PM_PINCTRL_DRIVE_STRENGTH_12MA = 3,
++};
++
+ enum zynqmp_pm_shutdown_type {
+ 	ZYNQMP_PM_SHUTDOWN_TYPE_SHUTDOWN,
+ 	ZYNQMP_PM_SHUTDOWN_TYPE_RESET,
+@@ -332,7 +390,6 @@ struct zynqmp_pm_query_data {
+ 	u32 arg3;
+ };
+ 
+-
+ int zynqmp_pm_invoke_fn(u32 pm_api_id, u32 arg0, u32 arg1,
+ 			u32 arg2, u32 arg3, u32 *ret_payload);
+ 
+@@ -384,7 +441,21 @@ int zynqmp_pm_request_wake(const u32 node,
+ int zynqmp_pm_get_rpu_mode(u32 node_id, enum rpu_oper_mode *rpu_mode);
+ int zynqmp_pm_set_rpu_mode(u32 node_id, u32 arg1);
+ int zynqmp_pm_set_tcm_config(u32 node_id, u32 arg1);
++int zynqmp_pm_clear_aie_npi_isr(u32 node, u32 irq_mask);
++int zynqmp_pm_pinctrl_request(const u32 pin);
++int zynqmp_pm_pinctrl_release(const u32 pin);
++int zynqmp_pm_pinctrl_get_function(const u32 pin, u32 *id);
++int zynqmp_pm_pinctrl_set_function(const u32 pin, const u32 id);
++int zynqmp_pm_pinctrl_get_config(const u32 pin, const u32 param,
++				 u32 *value);
++int zynqmp_pm_pinctrl_set_config(const u32 pin, const u32 param,
++				 u32 value);
+ #else
++static inline struct zynqmp_eemi_ops *zynqmp_pm_get_eemi_ops(void)
++{
++	return ERR_PTR(-ENODEV);
++}
++
+ static inline int zynqmp_pm_get_api_version(u32 *version)
+ {
+ 	return -ENODEV;
+@@ -477,7 +548,7 @@ static inline int zynqmp_pm_sd_dll_reset(u32 node_id, u32 type)
+ }
+ 
+ static inline int zynqmp_pm_reset_assert(const enum zynqmp_pm_reset reset,
+-			   const enum zynqmp_pm_reset_action assert_flag)
++					 const enum zynqmp_pm_reset_action assert_flag)
+ {
+ 	return -ENODEV;
+ }
+@@ -511,9 +582,9 @@ static inline int zynqmp_pm_release_node(const u32 node)
+ }
+ 
+ static inline int zynqmp_pm_set_requirement(const u32 node,
+-					const u32 capabilities,
+-					const u32 qos,
+-					const enum zynqmp_pm_request_ack ack)
++					    const u32 capabilities,
++					    const u32 qos,
++					    const enum zynqmp_pm_request_ack ack)
+ {
+ 	return -ENODEV;
+ }
+@@ -592,6 +663,43 @@ static inline int zynqmp_pm_set_tcm_config(u32 node_id, u32 arg1)
+ {
+ 	return -ENODEV;
+ }
++
++static inline int zynqmp_pm_clear_aie_npi_isr(u32 node, u32 irq_mask)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_request(const u32 pin)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_release(const u32 pin)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_get_function(const u32 pin, u32 *id)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_set_function(const u32 pin, const u32 id)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_get_config(const u32 pin, const u32 param,
++					       u32 *value)
++{
++	return -ENODEV;
++}
++
++static inline int zynqmp_pm_pinctrl_set_config(const u32 pin, const u32 param,
++					       u32 value)
++{
++	return -ENODEV;
++}
+ #endif
+ 
+ #endif /* __FIRMWARE_ZYNQMP_H__ */
+-- 
+2.25.1
+
