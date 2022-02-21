@@ -58,3 +58,6 @@ patch 0008-pinctrl-zynqmp-some-code-cleanups.patch
 patch 0009-dt-bindings-pinctrl-pinctrl-zynq-Convert-to-yaml.patch
 patch 0010-dt-bindings-pinctrl-zynq-Replace-io-standard-with-po.patch
 patch 0011-pinctrl-zynqmp-Drop-pinctrl_unregister-for-devm_-reg.patch
+patch 0012-dt-bindings-fpga-Add-doc-for-the-xilinx-afi-config-d.patch
+patch 0013-firmware-xilinx-Add-AFI-ioctl-support.patch
+patch 0014-fpga-Add-xilinx-AFI-config-driver.patch

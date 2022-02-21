@@ -1,0 +1,68 @@
+From 674a60c17eaa6eca21bfd90f5ff8118f1313175b Mon Sep 17 00:00:00 2001
+From: Michal Simek <michal.simek@xilinx.com>
+Date: Tue, 3 Dec 2019 01:03:43 -0800
+Subject: [PATCH 13/13] firmware: xilinx: Add AFI ioctl support
+
+Just wire AFI ioctls.
+
+Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+Signed-off-by: Rajan Vaja <rajan.vaja@xilinx.com>
+State: pending
+---
+ drivers/firmware/xilinx/zynqmp.c     | 7 +++++++
+ include/linux/firmware/xlnx-zynqmp.h | 7 +++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/drivers/firmware/xilinx/zynqmp.c b/drivers/firmware/xilinx/zynqmp.c
+index 31a391ccfb76..2aa3494d27cc 100644
+--- a/drivers/firmware/xilinx/zynqmp.c
++++ b/drivers/firmware/xilinx/zynqmp.c
+@@ -713,6 +713,13 @@ int zynqmp_pm_read_pggs(u32 index, u32 *value)
+ }
+ EXPORT_SYMBOL_GPL(zynqmp_pm_read_pggs);
+ 
++int zynqmp_pm_afi(u32 index, u32 value)
++{
++	return zynqmp_pm_invoke_fn(PM_IOCTL, 0, IOCTL_AFI, index, value,
++				   NULL);
++}
++EXPORT_SYMBOL_GPL(zynqmp_pm_afi);
++
+ /**
+  * zynqmp_pm_set_boot_health_status() - PM API for setting healthy boot status
+  * @value	Status value to be written
+diff --git a/include/linux/firmware/xlnx-zynqmp.h b/include/linux/firmware/xlnx-zynqmp.h
+index 2df5f7e2ef5c..097180362195 100644
+--- a/include/linux/firmware/xlnx-zynqmp.h
++++ b/include/linux/firmware/xlnx-zynqmp.h
+@@ -127,6 +127,7 @@ enum pm_ioctl_id {
+ 	IOCTL_READ_PGGS = 15,
+ 	/* Set healthy bit value */
+ 	IOCTL_SET_BOOT_HEALTH_STATUS = 17,
++	IOCTL_AFI = 18,
+ 	/* AI engine NPI ISR clear */
+ 	IOCTL_AIE_ISR_CLEAR = 24,
+ };
+@@ -430,6 +431,7 @@ int zynqmp_pm_write_ggs(u32 index, u32 value);
+ int zynqmp_pm_read_ggs(u32 index, u32 *value);
+ int zynqmp_pm_write_pggs(u32 index, u32 value);
+ int zynqmp_pm_read_pggs(u32 index, u32 *value);
++int zynqmp_pm_afi(u32 index, u32 value);
+ int zynqmp_pm_system_shutdown(const u32 type, const u32 subtype);
+ int zynqmp_pm_set_boot_health_status(u32 value);
+ int zynqmp_pm_force_pwrdwn(const u32 target,
+@@ -625,6 +627,11 @@ static inline int zynqmp_pm_read_pggs(u32 index, u32 *value)
+ 	return -ENODEV;
+ }
+ 
++static inline int zynqmp_pm_afi(u32 index, u32 value)
++{
++	return -ENODEV;
++}
++
+ static inline int zynqmp_pm_system_shutdown(const u32 type, const u32 subtype)
+ {
+ 	return -ENODEV;
+-- 
+2.25.1
+
