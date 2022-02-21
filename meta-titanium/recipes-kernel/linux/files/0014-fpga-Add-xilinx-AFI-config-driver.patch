@@ -1,0 +1,145 @@
+From 6cf8f5cbeb51fbd091f3c3dcc53dfb8b8cec187d Mon Sep 17 00:00:00 2001
+From: Shubhrajyoti Datta <shubhrajyoti.datta@xilinx.com>
+Date: Thu, 9 Jan 2020 10:25:34 +0530
+Subject: [PATCH 12/13] fpga: Add xilinx AFI config driver
+
+Add a AFI config driver. This is useful for the PS to PL configuration
+for the fpga manager.
+
+Signed-off-by: Shubhrajyoti Datta <shubhrajyoti.datta@xilinx.com>
+Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+State: pending
+[michal: Use zynqmp_pm_afi instead of eemi_ops->ioctl]
+---
+ drivers/fpga/Kconfig      |  9 +++++
+ drivers/fpga/Makefile     |  1 +
+ drivers/fpga/xilinx-afi.c | 85 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 95 insertions(+)
+ create mode 100644 drivers/fpga/xilinx-afi.c
+
+diff --git a/drivers/fpga/Kconfig b/drivers/fpga/Kconfig
+index 9b8bf6f8b3ad..e11bc483bf31 100644
+--- a/drivers/fpga/Kconfig
++++ b/drivers/fpga/Kconfig
+@@ -99,6 +99,15 @@ config FPGA_MGR_TS73XX
+ 	  FPGA manager driver support for the Altera Cyclone II FPGA
+ 	  present on the TS-73xx SBC boards.
+ 
++config XILINX_AFI_FPGA
++	bool "Xilinx AFI FPGA"
++	depends on FPGA_MGR_ZYNQMP_FPGA || COMPILE_TEST
++	help
++	  FPGA manager driver support for writing to the AFI registers
++	  for configuring the PS_PL interface. For some of the bitstream
++	  or designs to work the PS to PL interfaces need to be configured
++	  like the datawidth etc.
++
+ config FPGA_BRIDGE
+ 	tristate "FPGA Bridge Framework"
+ 	help
+diff --git a/drivers/fpga/Makefile b/drivers/fpga/Makefile
+index d8e21dfc6778..567da44e4297 100644
+--- a/drivers/fpga/Makefile
++++ b/drivers/fpga/Makefile
+@@ -18,6 +18,7 @@ obj-$(CONFIG_FPGA_MGR_TS73XX)		+= ts73xx-fpga.o
+ obj-$(CONFIG_FPGA_MGR_XILINX_SPI)	+= xilinx-spi.o
+ obj-$(CONFIG_FPGA_MGR_ZYNQ_FPGA)	+= zynq-fpga.o
+ obj-$(CONFIG_FPGA_MGR_ZYNQMP_FPGA)	+= zynqmp-fpga.o
++obj-$(CONFIG_XILINX_AFI_FPGA)		+= xilinx-afi.o
+ obj-$(CONFIG_ALTERA_PR_IP_CORE)         += altera-pr-ip-core.o
+ obj-$(CONFIG_ALTERA_PR_IP_CORE_PLAT)    += altera-pr-ip-core-plat.o
+ 
+diff --git a/drivers/fpga/xilinx-afi.c b/drivers/fpga/xilinx-afi.c
+new file mode 100644
+index 000000000000..d6676a874917
+--- /dev/null
++++ b/drivers/fpga/xilinx-afi.c
+@@ -0,0 +1,85 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Xilinx FPGA AFI bridge.
++ * Copyright (c) 2018 Xilinx Inc.
++ */
++
++#include <linux/err.h>
++#include <linux/firmware/xlnx-zynqmp.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++/**
++ * struct afi_fpga - AFI register description
++ * @value: value to be written to the register
++ * @regid: Register id for the register to be written
++ */
++struct afi_fpga {
++	u32 value;
++	u32 regid;
++};
++
++static int afi_fpga_probe(struct platform_device *pdev)
++{
++	struct afi_fpga *afi_fpga;
++	struct device_node *np = pdev->dev.of_node;
++	int ret;
++	int i, entries, pairs;
++	u32 reg, val;
++
++	afi_fpga = devm_kzalloc(&pdev->dev, sizeof(*afi_fpga), GFP_KERNEL);
++	if (!afi_fpga)
++		return -ENOMEM;
++	platform_set_drvdata(pdev, afi_fpga);
++
++	entries = of_property_count_u32_elems(np, "config-afi");
++	if (!entries || (entries % 2)) {
++		dev_err(&pdev->dev, "Invalid number of registers\n");
++		return -EINVAL;
++	}
++	pairs = entries / 2;
++
++	for (i = 0; i < pairs; i++) {
++		ret = of_property_read_u32_index(np, "config-afi", i * 2,
++						 &reg);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to read register\n");
++			return -EINVAL;
++		}
++		ret = of_property_read_u32_index(np, "config-afi", i * 2 + 1,
++						 &val);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to read value\n");
++			return -EINVAL;
++		}
++		ret = zynqmp_pm_afi(reg, val);
++		if (ret < 0) {
++			dev_err(&pdev->dev, "AFI register write error %d\n",
++				ret);
++			return ret;
++		}
++	}
++	return 0;
++}
++
++static const struct of_device_id afi_fpga_ids[] = {
++	{ .compatible = "xlnx,afi-fpga" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, afi_fpga_ids);
++
++static struct platform_driver afi_fpga_driver = {
++	.driver = {
++		.name = "afi-fpga",
++		.of_match_table = afi_fpga_ids,
++	},
++	.probe = afi_fpga_probe,
++};
++module_platform_driver(afi_fpga_driver);
++
++MODULE_DESCRIPTION("FPGA afi module");
++MODULE_AUTHOR("Shubhrajyoti Datta <shubhrajyoti.datta@xilinx.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+2.25.1
+
