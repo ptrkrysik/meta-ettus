@@ -42,8 +42,8 @@ IMAGE_BOOT_FILES ?= "boot.bin ${UBOOT_BINARY}"
 PMU_FIRMWARE_DEPLOY_DIR ?= "${TOPDIR}/tmp-xilinx/deploy/images/zynqmp-pmu"
 PMU_FIRMWARE_IMAGE_NAME ?= "pmu-firmware-zynqmp-pmu"
 
-KERNEL_CLASSES += "kernel-fitimage"
-KERNEL_IMAGETYPE = "fitImage"
+#KERNEL_CLASSES += "kernel-fitimage"
+#KERNEL_IMAGETYPE = "fitImage"
 INITRAMFS_IMAGE = "manufacturing-image"
 INITRAMFS_IMAGE_BUNDLE = "1"
 
