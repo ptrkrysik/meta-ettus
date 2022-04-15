@@ -12,7 +12,7 @@ KERNEL_VERSION_SANITY_SKIP="1"
 
 LINUX_VERSION_EXTENSION = "-x4xx"
 SRC_URI_ni-titanium = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git;branch=${KBRANCH}"
-COMPATIBLE_MACHINE_ni-titanium = "ni-titanium-rev2|ni-titanium-rev3|ni-titanium-rev4|ni-titanium-rev5"
+COMPATIBLE_MACHINE_ni-titanium = "ni-titanium-rev1|ni-titanium-rev2|ni-titanium-rev3|ni-titanium-rev4|ni-titanium-rev5"
 KMACHINE_ni-titanium = "ni-titanium"
 KCONFIG_MODE ?= "--alldefconfig"
 PV = "${LINUX_VERSION}+git${SRCPV}"

@@ -2,7 +2,7 @@ header:
   version: 10
   includes:
     - base.yml
-machine: ni-titanium-rev5-mender
+machine: ni-titanium-rev1-mender
 env:
   MENDER_ARTIFACT_NAME: git_x4xx
 target:
