@@ -5,6 +5,7 @@ target:
   - gnuradio-image
 env:
   MENDER_ARTIFACT_NAME: git
+  PREFERRED_UHD_VERSION: "4.1%"
 local_conf_header:
   mender:
     INHERIT += "mender-full"
