@@ -1,0 +1,24 @@
+From 72af910f38e6cc0e65189edef4d6298d123d113c Mon Sep 17 00:00:00 2001
+From: Piotr Krysik <ptrkrysik@gmail.com>
+Date: Fri, 29 Apr 2022 13:36:33 +0200
+Subject: [PATCH] x411: run PXE boot for jtagboot mode by default
+
+---
+ include/configs/ni-x411.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/ni-x411.h b/include/configs/ni-x411.h
+index f014591dfd..678f9357df 100644
+--- a/include/configs/ni-x411.h
++++ b/include/configs/ni-x411.h
+@@ -45,6 +45,7 @@
+           "dhcp ${load_addr} ${tftproot}/${fit_image} && "\
+           "bootm ${load_addr}#conf@ni_${variant}.dtb${overlays}\0" \
+         "netboot_pxe=dhcp; if pxe get; then pxe boot; fi\0" \
++        "jtagboot=run netboot_pxe\0" \
+         "distro_bootcmd=run $modeboot\0" \
+         EXTRA_ENV_MACHINE_DEFAULTS
+ 
+-- 
+2.25.1
+
