@@ -1,0 +1,41 @@
+From 2115202443c8e8d9fdaf021c2268caa2484ad746 Mon Sep 17 00:00:00 2001
+From: Piotr Krysik <ptrkrysik@gmail.com>
+Date: Fri, 29 Apr 2022 12:31:47 +0200
+Subject: [PATCH] x411: add netboot_pxe boot option to make network boot easier
+
+Running netboot_pxe will cause u-boot to boot from
+network using PXE. On the server side configuration
+of DHCP, TFTP and NFS is required. The tftproot on the server
+should contain 'pxelinux.cfg/default' configuration file.
+Example content of this file:
+LABEL Linux
+KERNEL fitImage
+APPEND earlycon clk_ignore_unused cpuidle.off=1 console=ttyPS0,115200 root=/dev/nfs nfsroot=192.168.0.1:/nfsroot/x4xx_3,v3,tcp uio_pdrv_genirq.of_id=usrp-uio ip=dhcp rw
+---
+ include/configs/ni-x411.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/configs/ni-x411.h b/include/configs/ni-x411.h
+index 5b3151f6fa..f014591dfd 100644
+--- a/include/configs/ni-x411.h
++++ b/include/configs/ni-x411.h
+@@ -17,6 +17,8 @@
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+         "fit_image=boot/fitImage\0" \
+         "load_addr=0x2000000\0" \
++        "kernel_addr_r=0x18000000\0" \
++        "pxefile_addr_r=0x10000000\0" \
+         "bootargs=uio_pdrv_genirq.of_id=usrp-uio at24.io_limit=64 rootwait clk_ignore_unused\0" \
+         "emmcboot=" \
+           "run mender_setup; " \
+@@ -42,6 +44,7 @@
+           "echo Loading FIT to RAM via DHCP/TFTP && " \
+           "dhcp ${load_addr} ${tftproot}/${fit_image} && "\
+           "bootm ${load_addr}#conf@ni_${variant}.dtb${overlays}\0" \
++        "netboot_pxe=dhcp; if pxe get; then pxe boot; fi\0" \
+         "distro_bootcmd=run $modeboot\0" \
+         EXTRA_ENV_MACHINE_DEFAULTS
+ 
+-- 
+2.25.1
+

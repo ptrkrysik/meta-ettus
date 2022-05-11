@@ -15,6 +15,8 @@ SRC_URI_prepend_ni-titanium += " \
                   file://0006-board-ni-add-support-for-X410.patch \
                   file://0007-Add-missing-header-which-fails-on-recent-GCC.patch \
                   file://0001-x411-add-support-for-x411-a-ZCU111-based-USRP.patch \
+                  file://0002-x411-add-netboot_pxe-boot-option-to-make-network-boo.patch \
+                  file://0003-x411-run-PXE-boot-for-jtagboot-mode-by-default.patch \
                   "
 
 DEPENDS_append_ni-titanium += "zip-native"
