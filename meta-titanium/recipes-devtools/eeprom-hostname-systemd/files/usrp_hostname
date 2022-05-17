@@ -1,7 +1,11 @@
 #!/bin/bash
 
+mb_pid=`eeprom-dump mb_eeprom|grep 'usrp_eeprom_board_info (0x10) pid:'|awk '{print $4}'|sed 's/,//'`
+
 if [ -f /data/network/hostname ]; then
         hostnamectl set-hostname $(cat /data/network/hostname)
+elif [ ${mb_pid} == "0x0411" ]; then
+        hostnamectl set-hostname pk-x4xx-`/usr/bin/eeprom-id mb | grep serial | sed -e 's/serial=//g'`
 else
         hostnamectl set-hostname ni-x4xx-`/usr/bin/eeprom-id mb | grep serial | sed -e 's/serial=//g'`
 fi
