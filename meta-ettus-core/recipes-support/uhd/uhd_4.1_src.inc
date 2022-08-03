@@ -1,5 +1,5 @@
-SRC_URI = "git://github.com/ptrkrysik/uhd.git;branch=x410_galvanized;protocol=https"
-SRCREV = "5c480177c4240b8702ed434fcc00607bd220e59b"
+SRC_URI = "git://github.com/ptrkrysik/uhd.git;branch=x411;protocol=https"
+SRCREV = "4759c8b9cac7d303ebe77b3c963c0722a75a1d5f"
 
 # A note on PR and PV:
 # PV is the package version, and PR is the package revision from the OE
