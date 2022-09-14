@@ -1,4 +1,4 @@
-From 0c5eee824b5dc3a898397d643d7ce83d3cafc246 Mon Sep 17 00:00:00 2001
+From 48806dae374911b96ce196edde509cd139a8c1d9 Mon Sep 17 00:00:00 2001
 From: Piotr Krysik <ptrkrysik@gmail.com>
 Date: Sat, 16 Apr 2022 10:15:14 +0200
 Subject: [PATCH] x411 support: add device tree - changes to zynqmp*.dts*
@@ -6,11 +6,11 @@ Subject: [PATCH] x411 support: add device tree - changes to zynqmp*.dts*
 
 ---
  arch/arm64/boot/dts/ni/Makefile               |   1 +
- arch/arm64/boot/dts/ni/x411-rev1.dts          | 300 +++++++++++
+ arch/arm64/boot/dts/ni/x411-rev1.dts          | 320 ++++++++++++
  .../arm64/boot/dts/xilinx/zynqmp-clk-ccf.dtsi | 104 +++-
  .../boot/dts/xilinx/zynqmp-zcu111-revA.dts    | 373 +++++++++++++-
  arch/arm64/boot/dts/xilinx/zynqmp.dtsi        | 485 ++++++++++++++++--
- 5 files changed, 1223 insertions(+), 40 deletions(-)
+ 5 files changed, 1243 insertions(+), 40 deletions(-)
  create mode 100644 arch/arm64/boot/dts/ni/x411-rev1.dts
 
 diff --git a/arch/arm64/boot/dts/ni/Makefile b/arch/arm64/boot/dts/ni/Makefile
@@ -27,10 +27,10 @@ index 0a14119bf98c..273154e2ab19 100644
  
 diff --git a/arch/arm64/boot/dts/ni/x411-rev1.dts b/arch/arm64/boot/dts/ni/x411-rev1.dts
 new file mode 100644
-index 000000000000..3470cd93e591
+index 000000000000..a7c1583c2c46
 --- /dev/null
 +++ b/arch/arm64/boot/dts/ni/x411-rev1.dts
-@@ -0,0 +1,300 @@
+@@ -0,0 +1,320 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * dts file for PK X411
@@ -222,6 +222,26 @@ index 000000000000..3470cd93e591
 +			mbox-names = "tx", "rx";
 +		};
 +	};
++};
++
++&i2c0 {
++       tca6416_u22: gpio@20 {
++               compatible = "ti,tca6416";
++               reg = <0x20>;
++               gpio-controller; /* interrupt not connected */
++               #gpio-cells = <2>;
++               gpio-line-names = "MAX6643_OT_B",
++                                 "MAX6643_FANFAIL_B",
++                                 "MIO26_PMU_INPUT_LS",
++                                 "SFP_SI5382_INT_ALM",
++                                 "IIC_MUX_RESET_B",
++                                 "GEM3_EXP_RESET_B",
++                                 "FMCP_HSPC_PRSNT_M2C_B",
++                                 "CLK_SPI_MUX_SEL0",
++                                 "CLK_SPI_MUX_SEL1",
++                                 "IRPS5401_ALERT_B",
++                                 "INA226_PMBUS_ALERT";
++       };
 +};
 +
 +&i2c1 {
