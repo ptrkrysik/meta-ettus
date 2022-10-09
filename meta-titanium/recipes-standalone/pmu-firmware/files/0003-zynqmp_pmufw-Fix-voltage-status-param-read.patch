@@ -1,0 +1,68 @@
+From a60a8577c853a904f53d4633c7a3b4893e3f7857 Mon Sep 17 00:00:00 2001
+From: Rajan Vaja <rajan.vaja@xilinx.com>
+Date: Mon, 26 Apr 2021 05:41:52 -0700
+Subject: [PATCH] zynqmp_pmufw: Fix voltage status param read
+
+Voltage status is per bank config. This means there
+are common bits for Voltage status for all pins for
+given banks. Current PMUFW logic reads different
+bits for different pins in bank which is wrong.
+
+Fix it by reading proper bit from register for Voltage status.
+
+Signed-off-by: Rajan Vaja <rajan.vaja@xilinx.com>
+Acked-by: Jyotheeswar Reddy Mutthareddyvari <jyotheeswar.reddy.mutthareddyvari@xilinx.com>
+---
+ lib/sw_apps/zynqmp_pmufw/src/pm_pinctrl.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/lib/sw_apps/zynqmp_pmufw/src/pm_pinctrl.c b/lib/sw_apps/zynqmp_pmufw/src/pm_pinctrl.c
+index b98dbd0..700afe2 100644
+--- a/lib/sw_apps/zynqmp_pmufw/src/pm_pinctrl.c
++++ b/lib/sw_apps/zynqmp_pmufw/src/pm_pinctrl.c
+@@ -64,6 +64,7 @@
+ 
+ #define PM_PIN_PARAM_RO		(1U << 0U)
+ #define PM_PIN_PARAM_2_BITS	(1U << 1U)
++#define PM_PIN_PARAM_PER_BANK	(1U << 2U)
+ 
+ #define PM_PIN_PARAM_PER_REG	26U
+ 
+@@ -737,7 +738,7 @@ static PmPinParam pmPinParams[PINCTRL_MAX_CONFIG] = {
+ 	},
+ 	[PINCTRL_CONFIG_VOLTAGE_STATUS] = {
+ 		.offset = 0x18U,
+-		.flags = PM_PIN_PARAM_RO,
++		.flags = PM_PIN_PARAM_RO | PM_PIN_PARAM_PER_BANK,
+ 	},
+ };
+ 
+@@ -934,7 +935,11 @@ s32 PmPinCtrlGetParam(const u32 pinId, const u32 paramId, u32* const value)
+ 		goto done;
+ 	}
+ 
+-	shift = pinId % PM_PIN_PARAM_PER_REG;
++	if (0U == (PM_PIN_PARAM_PER_BANK & pmPinParams[paramId].flags)) {
++		shift = pinId % PM_PIN_PARAM_PER_REG;
++	} else {
++		shift = 0;
++	}
+ 	addr = PM_PIN_PARAM_GET_ADDR(pinId, pmPinParams[paramId].offset);
+ 	val = XPfw_Read32(addr);
+ 
+@@ -1002,7 +1007,11 @@ s32 PmPinCtrlSetParam(const u32 pinId, const u32 paramId, const u32 value)
+ 	}
+ 
+ 	status = XST_SUCCESS;
+-	shift = pinId % PM_PIN_PARAM_PER_REG;
++	if (0U == (PM_PIN_PARAM_PER_BANK & pmPinParams[paramId].flags)) {
++		shift = pinId % PM_PIN_PARAM_PER_REG;
++	} else {
++		shift = 0;
++	}
+ 	addr = PM_PIN_PARAM_GET_ADDR(pinId, pmPinParams[paramId].offset);
+ 
+ 	/* Workaround the hardware bug in bank1_ctrl5 */
+-- 
+2.7.4
+
