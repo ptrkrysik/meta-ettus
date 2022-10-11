@@ -1,5 +1,7 @@
 inherit uhd_images_downloader
 
+UHD_BASE_URL_ni-titanium ??= "http://localhost:9900/files.ettus.com/binaries/cache/"
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI_append_ni-titanium = " \
@@ -7,35 +9,35 @@ SRC_URI_append_ni-titanium = " \
     "
 
 EXTRA_PACKAGES_ni-titanium ?= " \
-    ${PN}-x410 \
+    ${PN}-x411 \
     ${PN}-inventory \
     "
 
 PACKAGES_append_ni-titanium = " \
     ${EXTRA_PACKAGES} \
-    ${PN}-x410-firmware \
+    ${PN}-x411-firmware \
     "
 RDEPENDS_${PN}_ni-titanium = "${EXTRA_PACKAGES}"
 RDEPENDS_${PN}-firmware_append_ni-titanium = " \
-    ${PN}-x410-firmware \
+    ${PN}-x411-firmware \
     "
 
-RPROVIDES_${PN}-x410 = "${PN}-titanium"
-RPROVIDES_${PN}-x410-firmware = "${PN}-titanium-firmware"
+RPROVIDES_${PN}-x411 = "${PN}-titanium"
+RPROVIDES_${PN}-x411-firmware = "${PN}-titanium-firmware"
 
-DEFAULT_BITFILE_NAME_ni-titanium = "usrp_x410_fpga_X4_200"
+DEFAULT_BITFILE_NAME_ni-titanium = "usrp_x411_fpga_X4_200"
 
-FILES_${PN}-x410 = " \
-    ${UHD_IMAGES_INSTALL_PATH}/usrp_x410_fpga*.* \
+FILES_${PN}-x411 = " \
+    ${UHD_IMAGES_INSTALL_PATH}/usrp_x411_fpga*.* \
     "
 FILES_${PN}-inventory = "${UHD_IMAGES_INSTALL_PATH}/inventory.json"
-FILES_${PN}-x410-firmware = " \
-    /lib/firmware/x410.bin \
-    /lib/firmware/x410.dtbo \
+FILES_${PN}-x411-firmware = " \
+    /lib/firmware/x411.bin \
+    /lib/firmware/x411.dtbo \
     "
 
 UHD_IMAGES_TO_DOWNLOAD_ni-titanium ?= " \
-    ${@ '' if d.getVar('EXTERNALSRC') else 'x4xx_x410_fpga_default'} \
+    ${@ '' if d.getVar('EXTERNALSRC') else 'x4xx_x411_fpga_default'} \
     "
 
 UHD_FPGA_IMAGES_IN_FIRMWARE_ni-titanium ?= "${DEFAULT_BITFILE_NAME}"
@@ -54,9 +56,9 @@ do_download_uhd_images_append_ni-titanium() {
 
 do_install_append_ni-titanium() {
     install -d ${D}/${UHD_IMAGES_INSTALL_PATH}
-    install -m 0644 ${UHD_IMAGES_DOWNLOAD_DIR}/usrp_x410_fpga*.* ${D}/${UHD_IMAGES_INSTALL_PATH}
+    install -m 0644 ${UHD_IMAGES_DOWNLOAD_DIR}/usrp_x411_fpga*.* ${D}/${UHD_IMAGES_INSTALL_PATH}
     install -m 0644 ${UHD_IMAGES_DOWNLOAD_DIR}/inventory.json    ${D}/${UHD_IMAGES_INSTALL_PATH}
 
-    mv ${D}/lib/firmware/${DEFAULT_BITFILE_NAME}.bin ${D}/lib/firmware/x410.bin
-    mv ${D}/lib/firmware/${DEFAULT_BITFILE_NAME}.dtbo ${D}/lib/firmware/x410.dtbo
+    mv ${D}/lib/firmware/${DEFAULT_BITFILE_NAME}.bin ${D}/lib/firmware/x411.bin
+    mv ${D}/lib/firmware/${DEFAULT_BITFILE_NAME}.dtbo ${D}/lib/firmware/x411.dtbo
 }
