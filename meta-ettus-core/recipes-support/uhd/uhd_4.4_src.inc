@@ -1,5 +1,5 @@
-SRC_URI = "git://github.com/EttusResearch/uhd.git;branch=UHD-4.4;protocol=https"
-SRCREV = "5fac246bc18ab04cb4870026a630e46d0fd87b17"
+SRC_URI = "git://github.com/ptrkrysik/uhd.git;branch=x411_UHD-4.4;protocol=https"
+SRCREV = "22ee87b9c42f100452df9427ff63dc01755dbd22"
 
 # A note on PR and PV:
 # PV is the package version, and PR is the package revision from the OE
