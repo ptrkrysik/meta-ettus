@@ -101,8 +101,8 @@ if [ ! -z $_recovery_file_name ]; then
 		exit 1
 	fi
 	cp $_fitImage $TMP_DIR/fitImage
-	zip -j $TMP_DIR/$_recovery_file_name $TMP_DIR/fitImage
-	rm -f $TMP_DIR/fitImage
+	zip --symlinks -j $TMP_DIR/$_recovery_file_name $TMP_DIR/fitImage
+#	rm -f $TMP_DIR/fitImage
 fi
 echo "Zipping up SD image package..."
 (cd $TMP_DIR; zip $_sdimg_pkg_name *)
@@ -122,7 +122,7 @@ echo "Copying mender artifact to tmp dir..."
 mkdir -p $TMP_DIR
 cp -v $_mender_art $TMP_DIR/$_mender_file_name
 echo "Zipping up mender artifact..."
-(cd $TMP_DIR; zip $_mender_pkg_name *.mender)
+(cd $TMP_DIR; zip --symlinks $_mender_pkg_name *.mender)
 mv $TMP_DIR/*.zip $DST_DIR
 rm $TMP_DIR/*
 
@@ -144,7 +144,7 @@ if [ ! -z $_sdk_pkg_name ]; then
 			cp -v $_sdkpath/$_base $TMP_DIR/$_requested_device-$_base
 		done
 		echo "Zipping up SDK..."
-		zip -j $TMP_DIR/$_sdk_pkg_name $TMP_DIR/*.{sh,manifest,json}
+		zip --symlinks -j $TMP_DIR/$_sdk_pkg_name $TMP_DIR/*.{sh,manifest,json}
 		mv $TMP_DIR/*.zip $DST_DIR
 		rm $TMP_DIR/*
 	fi
@@ -158,7 +158,7 @@ else
 	echo "Zipping up Sources..."
 	_rootpath=`pwd`
 	pushd $_deploy_dir/sources
-	zip -r $_rootpath/$DST_DIR/$_sources_pkg_name .
+	zip --symlinks -r $_rootpath/$DST_DIR/$_sources_pkg_name .
 	popd
 fi
 
