@@ -1,5 +1,5 @@
 SRC_URI = "git://github.com/ptrkrysik/uhd.git;branch=x411_UHD-4.4;protocol=https"
-SRCREV = "22ee87b9c42f100452df9427ff63dc01755dbd22"
+SRCREV = "f2901c6211384623262cd670f976d6805ea4ede7"
 
 # A note on PR and PV:
 # PV is the package version, and PR is the package revision from the OE
