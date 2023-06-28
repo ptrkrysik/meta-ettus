@@ -1803,7 +1803,7 @@ index 0000000000..62bd96f357
 +#define __CONFIG_ETTUS_X411_REV1_H
 +
 +#define EXTRA_ENV_MACHINE_DEFAULTS \
-+  "variant=x410-rev5\0" 
++  "variant=x411-rev1\0" 
 +
 +#include "ni-x411.h"
 +
